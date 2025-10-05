@@ -1,379 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agonia Server</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --spotify-black: #121212;
-            --spotify-dark-grey: #181818;
-            --spotify-grey: #282828;
-            --spotify-light-grey: #b3b3b3;
-            --spotify-green: #1DB954;
-            --spotify-white: #ffffff;
-        }
-
-        body {
-            font-family: 'Circular Std', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            background-color: var(--spotify-black);
-            color: var(--spotify-white);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            max-width: 900px;
-            width: 100%;
-            background: var(--spotify-dark-grey);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        h1, h2 {
-            text-align: center;
-            color: var(--spotify-white);
-            margin-bottom: 25px;
-        }
-        .upload-section {
-            margin-bottom: 40px;
-            padding: 25px;
-            border: 1px dashed var(--spotify-grey);
-            border-radius: 8px;
-            text-align: center;
-            background-color: var(--spotify-grey);
-        }
-        .upload-section input[type="file"] {
-            margin-bottom: 15px;
-            color: var(--spotify-light-grey);
-            background-color: var(--spotify-dark-grey);
-            border: 1px solid var(--spotify-grey);
-            padding: 10px;
-            border-radius: 4px;
-            width: calc(100% - 22px);
-        }
-        .upload-section button,
-        .modal-actions button,
-        .full-view-modal-actions button,
-        .full-view-modal-actions a {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px 20px;
-            border-radius: 500px; /* Pill shape */
-            text-decoration: none;
-            color: var(--spotify-black);
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-        }
-        .upload-section button {
-            background-color: var(--spotify-green);
-        }
-        .upload-section button:hover {
-            transform: scale(1.05);
-            background-color: #1ed760; /* Slightly lighter green */
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .gallery-item {
-            border: 1px solid var(--spotify-grey);
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: var(--spotify-grey);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            cursor: pointer; /* Indicate clickable */
-            position: relative; /* For icon positioning */
-        }
-        .gallery-item img, .gallery-item video {
-            width: 100%;
-            height: 150px; /* Fixed height for gallery items */
-            object-fit: cover;
-            display: block;
-            border-bottom: 1px solid var(--spotify-dark-grey);
-        }
-        .gallery-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-        }
-        .media-icon {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: var(--spotify-white);
-            padding: 5px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            z-index: 1;
-        }
-
-        /* Mobile view: 3 columns */
-        @media (max-width: 768px) {
-            .gallery {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust minmax for smaller screens */
-            }
-        }
-        @media (max-width: 480px) {
-            .gallery {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Even smaller for very small screens */
-            }
-        }
-
-        .no-media {
-            text-align: center;
-            color: var(--spotify-light-grey);
-            margin-top: 30px;
-            font-size: 1.1em;
-        }
-
-        /* General Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: var(--spotify-dark-grey);
-            margin: auto;
-            padding: 30px;
-            border: 1px solid var(--spotify-grey);
-            border-radius: 8px;
-            width: 80%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-            position: relative;
-        }
-
-        .modal-content h3 {
-            color: var(--spotify-white);
-            margin-bottom: 20px;
-        }
-
-        .modal-actions button.confirm {
-            background-color: #ff4d4d; /* Red for confirm delete */
-            color: var(--spotify-white);
-        }
-        .modal-actions button.cancel {
-            background-color: var(--spotify-light-grey);
-            color: var(--spotify-black);
-        }
-        .modal-actions button:hover {
-            transform: scale(1.05);
-        }
-
-        /* Full View Modal Specific Styles */
-        #fullViewModal .modal-content {
-            max-width: 90%;
-            max-height: 90%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #fullViewModal .modal-media {
-            max-width: 100%;
-            max-height: 70vh; /* Limit height to prevent overflow */
-            object-fit: contain;
-            display: block;
-            margin-bottom: 20px;
-        }
-        #fullViewModal .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: var(--spotify-white);
-            font-size: 2em;
-            cursor: pointer;
-            padding: 5px 10px;
-            line-height: 1;
-            transition: color 0.2s ease-in-out;
-        }
-        #fullViewModal .close-button:hover {
-            color: var(--spotify-green);
-        }
-        .full-view-modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-        }
-        .full-view-modal-actions a.download { background-color: var(--spotify-light-grey); color: var(--spotify-black); }
-        .full-view-modal-actions button.delete { background-color: #ff4d4d; color: var(--spotify-white); }
-        .full-view-modal-actions a.download:hover,
-        .full-view-modal-actions button.delete:hover {
-            transform: scale(1.05);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agonia Server</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Eyyy Server</h1>
+<div class="container">
+    <h1>Eyyy Server</h1>
 
-        <div class="upload-section">
-            <h2>Upload of else....</h2>
-            <form action="/upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="media" accept="image/*,video/*" multiple required>
-                <button type="submit">Upload</button>
-            </form>
-        </div>
-
-        <h2>Your Media</h2>
-        <% if (mediaFiles.length > 0) { %>
-            <div class="gallery">
-                <% mediaFiles.forEach(file => { %>
-                    <div class="gallery-item" onclick="openFullViewModal('<%= file %>')">
-                        <% if (file.endsWith('.mp4') || file.endsWith('.mov') || file.endsWith('.avi') || file.endsWith('.webm')) { %>
-                            <div class="media-icon"><i class="fas fa-video"></i> Video</div>
-                            <video>
-                                <source src="/uploads/<%= file %>" type="video/<%= file.split('.').pop() %>">
-                                Your browser does not support the video tag.
-                            </video>
-                        <% } else { %>
-                            <div class="media-icon"><i class="fas fa-image"></i> Photo</div>
-                            <img src="/uploads/<%= file %>" alt="<%= file %>">
-                        <% } %>
-                        <!-- Actions moved to full-view modal -->
-                    </div>
-                <% }); %>
-            </div>
-        <% } else { %>
-            <p class="no-media">No photos or videos uploaded yet. Upload some to get started!</p>
-        <% } %>
+    <!-- Upload Section -->
+    <div class="upload-section">
+        <h2>Upload or else....</h2>
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="media" accept="image/*,video/*" multiple required>
+            <button type="submit">Upload</button>
+        </form>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="modal">
-        <div class="modal-content">
-            <h3>Are you sure you want to delete <span id="deleteFileName"></span>?</h3>
-            <div class="modal-actions">
-                <button class="confirm" id="confirmDeleteBtn">Delete</button>
-                <button class="cancel" onclick="closeDeleteConfirmModal()">Cancel</button>
-            </div>
+    <!-- Gallery -->
+    <h2>Gallery</h2>
+    <% if (mediaFiles.length > 0) { %>
+        <div class="gallery">
+            <% mediaFiles.forEach(file => { %>
+                <div class="gallery-item" onclick="openFullViewModal('<%= file %>')">
+                    <% if (file.match(/\.(mp4|mov|avi|webm)$/i)) { %>
+                        <div class="media-icon"><i class="fas fa-video"></i> Video</div>
+                        <!-- Static video thumbnail -->
+                        <img src="/uploads/<%= file %>#t=0.1" alt="Video thumbnail">
+                    <% } else { %>
+                        <div class="media-icon"><i class="fas fa-image"></i> Photo</div>
+                        <img src="/uploads/<%= file %>" alt="<%= file %>">
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <p class="no-media">No photos or videos uploaded yet. Upload some to get started!</p>
+    <% } %>
+</div>
+
+<!-- Full View Modal -->
+<div id="fullViewModal" class="modal">
+    <div class="modal-content">
+        <button class="close-button" onclick="closeFullViewModal()">&times;</button>
+        <div id="fullViewMediaContainer"></div>
+        <div class="full-view-modal-actions">
+            <a href="#" id="fullViewDownloadBtn" class="download">Download</a>
+            <button type="button" class="delete" id="fullViewDeleteBtn">Delete</button>
         </div>
     </div>
+</div>
 
-    <!-- Full View Modal -->
-    <div id="fullViewModal" class="modal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeFullViewModal()">&times;</button>
-            <div id="fullViewMediaContainer">
-                <!-- Media will be loaded here -->
-            </div>
-            <div class="full-view-modal-actions">
-                <a href="#" id="fullViewDownloadBtn" class="download">Download</a>
-                <button type="button" class="delete" id="fullViewDeleteBtn">Delete</button>
-            </div>
+<!-- Delete Confirmation Modal -->
+<div id="confirmDeleteModal" class="modal">
+    <div class="modal-content">
+        <p>Are you sure you want to delete this file?</p>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+            <button id="confirmDeleteYes" class="delete">Yes, delete</button>
+            <button id="confirmDeleteNo" class="download">Cancel</button>
         </div>
     </div>
+</div>
 
-    <script>
-        let fileToDelete = null;
-        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
-        const deleteFileNameSpan = document.getElementById('deleteFileName');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+<!-- Uploading Modal -->
+<div id="uploadingModal" class="modal">
+    <div class="modal-content">
+        <p>Uploading files, please wait...</p>
+        <div class="loader"></div>
+    </div>
+</div>
 
-        const fullViewModal = document.getElementById('fullViewModal');
-        const fullViewMediaContainer = document.getElementById('fullViewMediaContainer');
-        const fullViewDownloadBtn = document.getElementById('fullViewDownloadBtn');
-        const fullViewDeleteBtn = document.getElementById('fullViewDeleteBtn');
+<script>
+    // Modal elements
+    const fullViewModal = document.getElementById('fullViewModal');
+    const fullViewMediaContainer = document.getElementById('fullViewMediaContainer');
+    const fullViewDownloadBtn = document.getElementById('fullViewDownloadBtn');
+    const fullViewDeleteBtn = document.getElementById('fullViewDeleteBtn');
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    const confirmYes = document.getElementById('confirmDeleteYes');
+    const confirmNo = document.getElementById('confirmDeleteNo');
+    const uploadingModal = document.getElementById('uploadingModal');
 
-        function openDeleteConfirmModal(filename) {
-            fileToDelete = filename;
-            deleteFileNameSpan.textContent = filename;
-            deleteConfirmModal.style.display = 'flex';
+    let currentFilename = '';
+
+    // Full view modal
+    function openFullViewModal(filename) {
+        fullViewMediaContainer.innerHTML = '';
+        currentFilename = filename;
+        const ext = filename.split('.').pop().toLowerCase();
+        let media;
+
+        if (['mp4','mov','avi','webm'].includes(ext)) {
+            media = document.createElement('video');
+            media.src = `/uploads/${filename}`;
+            media.controls = true;
+            media.autoplay = true;
+            media.playsInline = true;
+            media.classList.add('modal-media');
+        } else {
+            media = document.createElement('img');
+            media.src = `/uploads/${filename}`;
+            media.alt = filename;
+            media.classList.add('modal-media');
         }
 
-        function closeDeleteConfirmModal() {
-            fileToDelete = null;
-            deleteConfirmModal.style.display = 'none';
-        }
+        fullViewMediaContainer.appendChild(media);
+        fullViewDownloadBtn.href = `/download/${filename}`;
+        fullViewDeleteBtn.onclick = () => showModal(confirmDeleteModal);
+        showModal(fullViewModal);
+    }
 
-        confirmDeleteBtn.onclick = function() {
-            if (fileToDelete) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/delete/${fileToDelete}`;
-                document.body.appendChild(form);
-                form.submit();
-            }
-        };
+    function closeFullViewModal() {
+        fullViewMediaContainer.innerHTML = '';
+        hideModal(fullViewModal);
+    }
 
-        function openFullViewModal(filename) {
-            fullViewMediaContainer.innerHTML = ''; // Clear previous content
-            const fileExtension = filename.split('.').pop().toLowerCase();
-            let mediaElement;
+    // Delete confirmation
+    confirmYes.onclick = () => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete/${currentFilename}`;
+        document.body.appendChild(form);
+        form.submit();
+    };
+    confirmNo.onclick = () => hideModal(confirmDeleteModal);
 
-            if (['mp4', 'mov', 'avi', 'webm'].includes(fileExtension)) {
-                mediaElement = document.createElement('video');
-                mediaElement.setAttribute('controls', '');
-                mediaElement.setAttribute('autoplay', '');
-                mediaElement.setAttribute('loop', ''); // Loop video
-                mediaElement.setAttribute('playsinline', ''); // For iOS autoplay
-                const source = document.createElement('source');
-                source.setAttribute('src', `/uploads/${filename}`);
-                source.setAttribute('type', `video/${fileExtension}`);
-                mediaElement.appendChild(source);
-                mediaElement.load(); // Explicitly load video
-            } else {
-                mediaElement = document.createElement('img');
-                mediaElement.setAttribute('src', `/uploads/${filename}`);
-                mediaElement.setAttribute('alt', filename);
-            }
-            mediaElement.classList.add('modal-media');
-            fullViewMediaContainer.appendChild(mediaElement);
+    // Show/hide modal
+    function showModal(modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+    function hideModal(modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display='none', 300);
+    }
 
-            fullViewDownloadBtn.href = `/download/${filename}`;
-            fullViewDeleteBtn.onclick = () => {
-                closeFullViewModal(); // Close full view modal before opening delete confirm
-                openDeleteConfirmModal(filename);
-            };
+    // Close modals on click outside
+    window.onclick = e => {
+        if(e.target==fullViewModal) hideModal(fullViewModal);
+        if(e.target==confirmDeleteModal) hideModal(confirmDeleteModal);
+    };
 
-            fullViewModal.style.display = 'flex';
-        }
+    // Uploading modal
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.addEventListener('submit', () => {
+        uploadingModal.style.display = 'flex';
+    });
 
-        function closeFullViewModal() {
-            const videoElement = fullViewMediaContainer.querySelector('video');
-            if (videoElement) {
-                videoElement.pause(); // Pause video when closing modal
-            }
-            fullViewModal.style.display = 'none';
-        }
-
-        // Close modals if the user clicks outside of them
-        window.onclick = function(event) {
-            if (event.target == deleteConfirmModal) {
-                closeDeleteConfirmModal();
-            }
-            if (event.target == fullViewModal) {
-                closeFullViewModal();
-            }
-        };
-    </script>
+    // WebSocket live reload
+    const ws = new WebSocket(`ws://${window.location.host}`);
+    ws.onmessage = event => { if(event.data==='reload') window.location.reload(); }
+    ws.onopen = () => console.log('WebSocket connected');
+    ws.onclose = () => setTimeout(()=>location.reload(),1000);
+</script>
 </body>
 </html>
